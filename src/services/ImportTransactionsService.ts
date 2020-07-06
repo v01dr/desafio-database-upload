@@ -55,21 +55,48 @@ class ImportTransactionsService {
       //Remove the firt line, a column description one
       transactionsStrArray.splice(0, 1)
 
-      //Remove the empty element
+      //Remove empty elements
       transactionsStrArray = transactionsStrArray.filter(t => t!='')
 
       let total = 0
       const transactionsRepository = getCustomRepository(TransactionsRepository);
+      const categoriesRepository = getRepository(Category)
+
+
+      let receivedCategories:string[] = []
+      transactionsStrArray.map((transaction) => {
+        receivedCategories.push(transaction.split(',')[3].trim())
+      })
+      //console.log(receivedCategories)
+
+      const uniqueCategories = Array.from(new Set(receivedCategories))
+      //console.log(uniqueCategories)
+
+      let savedCategories:Category[] = []
+
+      for(const unique of uniqueCategories){
+        //Save each unique identified categiry
+        const categorySaved:Category = await categoriesRepository.save({ title: unique })
+        savedCategories.push(categorySaved)
+      }
+      /**
+      //Asynchronously iterate the unique category array
+      await Promise.all(uniqueCategories.map(async (category) => {
+        //Save each unique identified categiry
+        const categorySaved:Category = await categoriesRepository.save({ title: category })
+        savedCategories.push(categorySaved)
+      }))
+       */
 
       //Iterate through Transaction Array in string format
-      await Promise.all(transactionsStrArray.map(async (transaction) => {
+      //await Promise.all(transactionsStrArray.map(async (transaction) =>
+      for (const transaction of transactionsStrArray){
 
         const title = transaction.split(',')[0].trim()
         const type = transaction.split(',')[1].trim()
         const value = Number(transaction.split(',')[2].trim())
         const category = transaction.split(',')[3].trim()
 
-        const categoriesRepository = getRepository(Category)
 
         if (type != 'income' && type != 'outcome') {
           throw new AppError('Transaction type not allowed')
@@ -85,7 +112,8 @@ class ImportTransactionsService {
           }
         }
 
-        //const data = await Promise.all([promise1, promise2])
+
+        /** const data = await Promise.all([promise1, promise2]) */
         const receivedCategory = (await Promise.all([categoriesRepository.findOne({
           where: {
             title: category
@@ -93,17 +121,10 @@ class ImportTransactionsService {
         })]))[0]
 
         let category_id = '0'
-
-        console.log("Categoria recebida: " + receivedCategory?.id + '->' + Date.now() + "___" + receivedCategory?.title)
         if (receivedCategory) {
           category_id = receivedCategory.id
-          console.log("Não vou salvar: " + category_id + '->' + Date.now() + "___" + category)
         } else {
-          const savedCategory =  (await Promise.all([categoriesRepository.save({ title: category })]))[0]
-
-          category_id = savedCategory.id
-          console.log("Salvei: " + category_id + '->' + Date.now() + "___" + savedCategory.title)
-          setTimeout(() => {}, 5000)
+          throw new AppError('Category not found')
         }
 
 
@@ -116,7 +137,8 @@ class ImportTransactionsService {
 
         transactions.push(newTransaction)
 
-      }))
+      //}))
+      }
 
       //Save all transaction in a batch way
       await transactionsRepository.save(transactions);

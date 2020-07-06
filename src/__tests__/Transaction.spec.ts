@@ -219,6 +219,7 @@ describe('Transaction', () => {
       ]),
     );
 
+
     expect(transactions).toHaveLength(3);
     expect(transactions).toEqual(
       expect.arrayContaining([
@@ -236,5 +237,6 @@ describe('Transaction', () => {
         }),
       ]),
     );
+
   });
 });

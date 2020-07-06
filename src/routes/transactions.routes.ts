@@ -111,7 +111,7 @@ transactionsRouter.delete('/:id', async (request, response) => {
 
 transactionsRouter.post(
   '/import',
-  upload.single('transactions_file'),
+  upload.single('file'),
   async (request, response) => {
   // TODO
   const importTransactionsService = new ImportTransactionsService()
@@ -120,13 +120,13 @@ transactionsRouter.post(
   })
 
   const transactionsRepository = getCustomRepository(TransactionsRepository);
+  const categoriesRepository = getRepository(Category)
+
   let result = {}
   if (transactions.length === 0) {
     result = { ...transactions };
   } else {
     const balance = await transactionsRepository.getBalance();
-
-    const categoriesRepository = getRepository(Category)
 
     const completeTransactions: CompleteTransaction[] = []
 
