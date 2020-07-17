@@ -1,3 +1,4 @@
+/* eslint-disable no-param-reassign */
 import { EntityRepository, Repository } from 'typeorm';
 
 import Transaction from '../models/Transaction';
@@ -10,15 +11,13 @@ interface Balance {
 
 @EntityRepository(Transaction)
 class TransactionsRepository extends Repository<Transaction> {
-
   public async getBalance(): Promise<Balance> {
     // TODO
-    let transactions: Transaction[]
-    transactions = await super.find();
+    const transactions: Transaction[] = await super.find();
 
     const income = transactions.reduce((totalIncome, transaction) => {
       if (transaction.type === 'income') {
-        totalIncome += transaction.value;
+        totalIncome += Number(transaction.value);
       }
 
       return totalIncome;
@@ -26,7 +25,7 @@ class TransactionsRepository extends Repository<Transaction> {
 
     const outcome = transactions.reduce((totalOutcome, transaction) => {
       if (transaction.type === 'outcome') {
-        totalOutcome += transaction.value;
+        totalOutcome += Number(transaction.value);
       }
 
       return totalOutcome;
